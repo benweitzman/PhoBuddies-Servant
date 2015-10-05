@@ -24,7 +24,7 @@ data Invitation = Invitation
   { invitationId :: Int
   , host :: User
   , location :: Restaurant
-  , time :: LocalTime
+  , date :: LocalTime
   , guest :: Maybe User
   } deriving (Generic, Show)
 

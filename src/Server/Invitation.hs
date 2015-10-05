@@ -9,8 +9,12 @@ import API.Invitation
 import API.Pagination
 import User
 import Invitation
+import Restaurant
 import Util.JWT
 import Server.Config
+
+import Control.Monad
+import Control.Monad.Trans
 
 import Data.Aeson
 
@@ -40,27 +44,23 @@ getInvitations :: Maybe Int64 -> ConfigM (Headers '[Header "Link" Pagination] [I
 getInvitations Nothing = getInvitations (Just 1)
 getInvitations (Just offset) = runTransaction $ do
     C.Result _ [[countVal]] _ _ <- C.cypher "MATCH (i:Invitation) RETURN COUNT(i)" HM.empty
-    C.Result _ rows _ _ <- C.cypher "MATCH (host:User)-[CREATED]->(i:Invitation)-[AT]->(r:Restaurant) \
-                                   \ OPTIONAL MATCH (guest:User)-[ACCEPTED]->i \
+    C.Result _ rows _ _ <- C.cypher "MATCH (host:User)-[:CREATED]->(i:Invitation)-[:AT]->(r:Restaurant) \
+                                   \ OPTIONAL MATCH (guest:User)-[:ACCEPTED]->i \
                                    \ RETURN host, ID(host), guest, ID(guest), i, ID(i), r, ID(r) \
                                    \ SKIP {offset} LIMIT 50" $ HM.fromList [("offset", C.newparam . (50 *) $ offset - 1)]
     let mInvites = map (\[hostProp, hostIdProp, guestProp, guestIdProp, inviteProp, inviteIdProp, restProp, restIdProp] ->
             let hostMap = toJSON <$> HM.insert ("id" :: Text) hostIdProp <$> fromJSON hostProp
-
                 guestMap = toJSON $ case HM.insert ("id" :: Text) guestIdProp <$> fromJSON guestProp of 
                                       Error _ -> Nothing
 
                                       Success x -> Just x
-
                 restaurantMap = toJSON <$> HM.adjust (\(String hoursString) -> fromJust . decode . encodeUtf8 $ LT.fromStrict hoursString) "hours" <$>
                                            HM.insert ("id" :: Text) restIdProp <$> 
                                            fromJSON restProp
-
-                invitationMap = case (HM.insert ("restaurant" :: Text) <$> restaurantMap) <*>
+                invitationMap = case (HM.insert ("location" :: Text) <$> restaurantMap) <*>
                                      ((HM.insert "host" <$> hostMap) <*>
-                                     (HM.insert "id" inviteIdProp <$>
+                                     (HM.insert "invitationId" inviteIdProp <$>
                                      (HM.insert "guest" guestMap <$> 
-                                     HM.adjust (\(String dateString) -> fromJust . decode . encodeUtf8 $ LT.fromStrict timeString) "date" <$>   
                                      fromJSON inviteProp))) of
                                     Error _ -> Nothing
 
