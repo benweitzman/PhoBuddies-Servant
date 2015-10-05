@@ -1,0 +1,3 @@
+[submodule "aeson"]
+	path = aeson
+	url = https://github.com/benweitzman/aeson
