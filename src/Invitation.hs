@@ -9,9 +9,11 @@ import Restaurant
 import Data.Aeson
 import Data.Aeson.Types
 
+import Data.Maybe
+
 import Data.Monoid
 
-import Data.Text
+import Data.Text hiding (map)
 
 import Data.Time.Clock (UTCTime)
 import Data.Time (TimeOfDay, LocalTime)
@@ -26,8 +28,33 @@ data Invitation = Invitation
   , location :: Restaurant
   , date :: LocalTime
   , guest :: Maybe User
-  } deriving (Generic, Show)
+  } deriving (Show)
 
-instance FromJSON Invitation
+instance ToJSON Invitation where
+  toJSON (Invitation id host location date guest) =
+        object $ [ "id" .= id
+                 , "host" .= host
+                 , "location" .= location
+                 , "date" .= date
+                 ] ++
+                 map ("guest" .=) (maybeToList guest)
 
-instance ToJSON Invitation
+instance FromJSON Invitation where
+  parseJSON (Object v) = Invitation <$>
+                         v .: "id" <*>
+                         v .: "host" <*>
+                         v .: "location" <*>
+                         v .: "date" <*>
+                         v .:? "guest"
+  parseJSON _ = mempty
+
+data InvitationCreation = InvitationCreation
+  { locationId :: Int
+  , date' :: LocalTime
+  } deriving (Show, Eq)
+
+instance FromJSON InvitationCreation where 
+  parseJSON (Object v) = InvitationCreation <$>
+                         v .: "locationId" <*>
+                         v .: "date"
+  parseJSON _ = mempty

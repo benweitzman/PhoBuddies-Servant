@@ -29,8 +29,8 @@ type InvitationAPI = GetAll
                      -- GET /?offset=1 : Get a list of invitations
 
                 :<|> Header "Authorization" (Token Authorization)
-                  :> ReqBody '[JSON] Invitation 
-                  :> Post '[] ()
+                  :> ReqBody '[JSON] InvitationCreation
+                  :> Post '[JSON] Invitation
                      -- POST / : Create an invitation
 
                 :<|> Capture "id" Int 
