@@ -40,19 +40,6 @@ data OpenHours = OpenHours
     , closeTime :: TimeOfDay
     } deriving (Show, Eq, Generic)
 
-instance ToJSON TimeOfDay where
-    toJSON (TimeOfDay hour min sec) = object [ "hour" .= hour
-                                             , "minute" .= min
-                                             , "second" .= sec
-                                             ]
-
-instance FromJSON TimeOfDay where
-  parseJSON (Object v) = TimeOfDay <$>
-                         v .: "hour" <*>
-                         v .: "minute" <*>
-                         v .: "second"
-  parseJSON _ = mzero
-
 instance FromJSON OpenHours
 
 instance ToJSON OpenHours

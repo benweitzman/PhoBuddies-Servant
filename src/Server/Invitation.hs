@@ -62,8 +62,8 @@ getInvitations (Just offset) = runTransaction $ do
                 invitationMap = case (HM.insert ("location" :: Text) <$> restaurantMap) <*>
                                      ((HM.insert "host" <$> hostMap) <*>
                                      (HM.insert "id" inviteIdProp <$>
-                                     (HM.insert "guest" guestMap <$> 
-                                     fromJSON inviteProp))) of
+                                     HM.insert "guest" guestMap <$>
+                                     fromJSON inviteProp)) of
                                     Error _ -> Nothing
 
                                     Success x -> Just x
@@ -92,7 +92,6 @@ createInvitation (Just (Token token)) (InvitationCreation locId date) = do
                               createRelationship "CREATED" HM.empty userNode inviteNode
                               createRelationship "AT" HM.empty inviteNode restNode
 
-                              liftIO $ print restNode
                               let  Just (userId :: Int64) = decodeStrict $ nodeId userNode
                                    Just (restId :: Int64) = decodeStrict $ nodeId restNode
                                    Just (inviteId :: Int) = decodeStrict $ nodeId inviteNode
