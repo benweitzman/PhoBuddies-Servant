@@ -45,7 +45,7 @@ instance FromJSON Invitation where
                          v .: "host" <*>
                          v .: "location" <*>
                          v .: "date" <*>
-                         v .:? "guest"
+                         v .: "guest"
   parseJSON _ = mempty
 
 data InvitationCreation = InvitationCreation
