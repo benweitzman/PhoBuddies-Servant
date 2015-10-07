@@ -28,8 +28,7 @@ import qualified Data.HashMap.Lazy as HM
 import Data.Maybe
 
 import Data.Text hiding (map)
-import qualified Data.Text.Lazy as LT
-import Data.Text.Lazy.Encoding
+import Data.Text.Encoding
 
 import Database.Neo4j
 import qualified Database.Neo4j.Transactional.Cypher as C
@@ -57,7 +56,7 @@ getInvitations (Just offset) = runTransaction $ do
                                       Error _ -> Nothing
 
                                       Success x -> Just x
-                restaurantMap = toJSON <$> HM.adjust (\(String hoursString) -> fromJust . decode . encodeUtf8 $ LT.fromStrict hoursString) "hours" <$>
+                restaurantMap = toJSON <$> HM.adjust (\(String hoursString) -> fromJust . decodeStrict . encodeUtf8 $ hoursString) "hours" <$>
                                            HM.insert ("id" :: Text) restIdProp <$> 
                                            fromJSON restProp
                 invitationMap = case (HM.insert ("location" :: Text) <$> restaurantMap) <*>
@@ -88,18 +87,18 @@ createInvitation (Just (Token token)) (InvitationCreation locId date) = do
         case mRestaurant of
           Nothing -> return $ Left err404
 
-          Just restNode -> do inviteNode <- createNode $ HM.fromList [ "date" |: dropAround (== '"') (LT.toStrict (decodeUtf8 (encode date)))]
+          Just restNode -> do inviteNode <- createNode $ HM.fromList [ "date" |: dropAround (== '"') (decodeUtf8 . LB.toStrict $ encode date)]
                               addLabels ["Invitation"] inviteNode
                               createRelationship "CREATED" HM.empty userNode inviteNode
                               createRelationship "AT" HM.empty inviteNode restNode
 
                               liftIO $ print restNode
-                              let  Just (userId :: Int64) = decode . LB.fromStrict $ nodeId userNode
-                                   Just (restId :: Int64) = decode . LB.fromStrict $ nodeId restNode
-                                   Just (inviteId :: Int) = decode . LB.fromStrict $ nodeId inviteNode
+                              let  Just (userId :: Int64) = decodeStrict $ nodeId userNode
+                                   Just (restId :: Int64) = decodeStrict $ nodeId restNode
+                                   Just (inviteId :: Int) = decodeStrict $ nodeId inviteNode
 
                                    Just host = decode . encode $ HM.insert "id" (newval userId) (getNodeProperties userNode)
-                                   Just restaurant = decode . encode $ HM.adjust (\(String hoursString) -> fromJust . decode . encodeUtf8 $ LT.fromStrict hoursString) "hours"
+                                   Just restaurant = decode . encode $ HM.adjust (\(String hoursString) -> fromJust . decodeStrict . encodeUtf8 $ hoursString) "hours"
                                                       (fromJust . decode . encode $ HM.insert "id" (newval restId) (getNodeProperties restNode) :: HM.HashMap Text Value)
 
                               return . Right $ Invitation inviteId host restaurant date Nothing
