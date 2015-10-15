@@ -9,6 +9,7 @@ import API.Restaurant
 import API.Pagination
 import Restaurant
 import Server.Config
+import Util.Neo
 
 import Control.Applicative
 import Control.Monad
@@ -39,18 +40,9 @@ restaurantServer = getAll
 getAll :: Maybe Int64 -> ConfigM (Headers '[Header "Link" Pagination] [Restaurant])
 getAll Nothing = getAll (Just 1)
 getAll (Just offset) = runTransaction $ do
-    C.Result _ [[countVal]] _ _ <- C.cypher "MATCH (r:Restaurant) RETURN COUNT(r)" HM.empty
-    C.Result _ rows _ _ <- C.cypher "MATCH (r:Restaurant) RETURN r, ID(r) SKIP {offset} LIMIT 50" $ HM.fromList [("offset", C.newparam . (50 *) $ offset - 1)]
-
-    let mRestaurants = map (\[restProps, idProp] ->
-            let restMap = case HM.adjust (\(String hoursString) -> fromJust . decode . encodeUtf8 $ LT.fromStrict hoursString) "hours" <$>
-                               (HM.insert ("id" :: Text) idProp <$> 
-                               fromJSON restProps) of
-                        Error _ -> Nothing
-
-                        Success x -> Just x
-            in restMap >>= decode . encode) rows
-        Success count = fromJSON countVal
+    [Only countVal] <- query "MATCH (r:Restaurant) RETURN COUNT(r)" HM.empty
+    rests <- query "MATCH (r:Restaurant) RETURN ID(r), r SKIP {offset} LIMIT 50" $ HM.fromList [("offset", C.newparam . (50 *) $ offset - 1)]
+    let Success count = fromJSON countVal
         maxOffset = (count `div` 50) + 1
 
-    return . addHeader (mkPagination offset maxOffset (Proxy :: Proxy GetAll) (Proxy :: Proxy RestaurantAPI)) $ catMaybes mRestaurants
+    return . addHeader (mkPagination offset maxOffset (Proxy :: Proxy GetAll) (Proxy :: Proxy RestaurantAPI)) $ rests

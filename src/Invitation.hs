@@ -5,6 +5,7 @@ module Invitation where
 
 import User
 import Restaurant
+import Util.Neo
 
 import Data.Aeson
 import Data.Aeson.Types
@@ -53,8 +54,16 @@ data InvitationCreation = InvitationCreation
   , date' :: LocalTime
   } deriving (Show, Eq)
 
-instance FromJSON InvitationCreation where 
+instance FromJSON InvitationCreation where
   parseJSON (Object v) = InvitationCreation <$>
                          v .: "locationId" <*>
                          v .: "date"
   parseJSON _ = mempty
+
+instance FromRow Invitation where
+  fromRow = Invitation <$>
+            field <*>
+            fromRow <*>
+            fromRow <*>
+            extract "date" <*>
+            fromRow

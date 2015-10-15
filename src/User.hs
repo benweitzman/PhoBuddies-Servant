@@ -17,8 +17,9 @@ import Servant
 
 import Util.JWT
 import Util.Crypto
+import Util.Neo
 
-data Email = Email 
+data Email = Email
   { localPart :: Text
   , serverPart :: Text
   } deriving (Eq)
@@ -50,7 +51,7 @@ data Registration = Registration
   , registrationPassword :: Password Unhashed
   }
 
-instance Show Registration where 
+instance Show Registration where
   show (Registration email pw) = "Registration{registrationEmail=" ++ show email ++ ", registrationPassword=" ++ show pw ++ "}"
 
 instance FromJSON Registration where
@@ -82,12 +83,15 @@ instance FromJSON User where
                          v .: "id" <*>
                          v .:? "age" <*>
                          v .:? "photo" <*>
-                         v .:? "name" 
+                         v .:? "name"
   parseJSON _          = mempty
 
 instance ToJSON User where
-  toJSON (User id a p n) = 
+  toJSON (User id a p n) =
         object $ "id" .= id :
                  map ("age" .=) (maybeToList a) ++
                  map ("photo" .=) (maybeToList p) ++
                  map ("name" .=) (maybeToList n)
+
+instance FromRow User where
+  fromRow = User <$> field <*> attempt "age" <-> attempt "photo" <-> attempt "name"

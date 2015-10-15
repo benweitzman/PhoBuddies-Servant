@@ -3,6 +3,8 @@
 
 module Restaurant where
 
+import Util.Neo
+
 import qualified Data.Map as M
 
 import Control.Monad
@@ -33,10 +35,10 @@ instance ToJSON WeekDay where
 
 instance FromJSON WeekDay where
   parseJSON (String t) = pure . read $ unpack t
-  parseJSON _ = mzero            
+  parseJSON _ = mzero
 
-data OpenHours = OpenHours 
-    { openTime :: TimeOfDay 
+data OpenHours = OpenHours
+    { openTime :: TimeOfDay
     , closeTime :: TimeOfDay
     } deriving (Show, Eq, Generic)
 
@@ -69,10 +71,21 @@ instance FromJSON Restaurant where
                            v .: "name" <*>
                            v .: "description" <*>
                            v .: "address" <*>
-                           v .: "latitude" <*> 
+                           v .: "latitude" <*>
                            v .: "longitude" <*>
-                           v .: "photo" <*> 
+                           v .: "photo" <*>
                            v .: "hours"
     parseJSON _ = mempty
 
 instance ToJSON Restaurant
+
+instance FromRow Restaurant where
+    fromRow = Restaurant <$>
+              field <*>
+              extract "name" <->
+              extract "description" <->
+              extract "address" <->
+              extract "latitude" <->
+              extract "longitude" <->
+              extract "photo" <->
+              extract "hours"
