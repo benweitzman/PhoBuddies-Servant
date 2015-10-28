@@ -64,3 +64,29 @@ executable PhoBuddies-Servant
                        PhoBuddies-Servant
   hs-source-dirs:      app
   default-language:    Haskell2010
+
+test-suite phobuddies-hspec
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , PhoBuddies-Servant
+                     , hspec
+                     , hspec-wai
+                     , hspec-wai-json
+                     , http-types
+                     , wai
+                     , wai-extra
+                     , directory
+                     , text
+                     , bytestring
+                     , haskell-neo4j-client
+  default-language:    Haskell2010
+
+test-suite phobuddies-hlint
+  default-language:    Haskell2010
+  hs-source-dirs:      test
+  main-is:             HLint.hs
+  type:                exitcode-stdio-1.0
+  build-depends:       base
+                     , hlint <  2

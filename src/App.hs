@@ -27,10 +27,10 @@ import System.Exit
 import Web.JWT
 
 
-parseConfig :: String -> IO (Either CPError Config)
+parseConfig :: String -> IO Config
 parseConfig runmode = do
   read <- readfile emptyCP "phobuddies.cfg"
-  return $     do cp <- read
+  let config = do cp <- read
                   jwt <- secret . pack <$> get cp runmode "jwt_secret"
                   neoHost <- BS.pack <$> get cp runmode "neo_host"
                   neoPort <- get cp runmode "neo_port"
@@ -40,6 +40,10 @@ parseConfig runmode = do
                           { jwtSecret=jwt
                           , neoConfig=NeoConfig neoHost neoPort (Just (neoUser, neoPassword))
                           }
+  case config of
+    Left e -> putStrLn "Error parsing config file: " >> print e >> exitFailure
+
+    Right c -> return c
 
 main :: IO ()
 main = do
@@ -47,9 +51,6 @@ main = do
   case args of
     [runmode] -> do
       config <- parseConfig runmode
-      case config of
-        Left e -> putStrLn "Error parsing config file: " >> print e >> exitFailure
-
-        (Right c) -> Network.Wai.Handler.Warp.run 8080 (app c)
+      Network.Wai.Handler.Warp.run 8080 (app config)
 
     _ -> putStrLn "Runmode required" >> exitFailure
