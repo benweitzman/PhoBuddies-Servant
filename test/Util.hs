@@ -26,7 +26,7 @@ import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
 
 clearDB :: Config -> IO ()
-clearDB Config{neoConfig=NeoConfig host port mAuth} = do
+clearDB Config{neoConfig=NeoConfig host port mAuth} =
     case mAuth of
         Just auth -> liftIO . void $ withAuthConnection host port auth n
 
@@ -41,7 +41,7 @@ setup  = do
     return $ app config
 
 postJSON :: BS.ByteString -> LBS.ByteString -> WaiSession SResponse
-postJSON url body = request methodPost url [("Content-Type", "application/json")] body
+postJSON url = request methodPost url [("Content-Type", "application/json")]
 
 
 

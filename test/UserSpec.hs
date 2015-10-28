@@ -12,7 +12,7 @@ import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
 
 spec :: Spec
-spec = do
+spec =
   with setup $
     describe "Users" $ do
         it "should create a user" $

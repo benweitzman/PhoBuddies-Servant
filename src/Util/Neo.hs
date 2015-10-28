@@ -115,7 +115,7 @@ attempt key = do
           case fromJSON val of
             Error err -> throwError $ "Unable to parse value JSON: " <> pack err
 
-            Success x -> modify (+1) >> (return $ Just x)
+            Success x -> modify (+1) >> return (Just x)
 
         Nothing -> modify (+1) >> return Nothing
 
