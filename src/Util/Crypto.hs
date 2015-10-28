@@ -3,12 +3,12 @@
 {-# LANGUAGE GADTs              #-}
 {-# LANGUAGE OverloadedStrings  #-}
 
-module Util.Crypto 
+module Util.Crypto
     ( Hashed
     , Unhashed
     , Password (HashedPW)
     , hashPassword
-    , verifyPassword 
+    , verifyPassword
     )
 where
 
@@ -39,18 +39,18 @@ instance Show (Password Hashed) where
     show (HashedPW x) = show x
 
 hashPassword :: MonadIO m => Password Unhashed -> m (Maybe (Password Hashed))
-hashPassword (UnhashedPW password) = liftIO $ 
-    fmap (HashedPW . decodeUtf8) <$> 
-    (hashPasswordUsingPolicy slowerBcryptHashingPolicy $ encodeUtf8 password)
+hashPassword (UnhashedPW password) = liftIO $
+    fmap (HashedPW . decodeUtf8) <$>
+    hashPasswordUsingPolicy slowerBcryptHashingPolicy (encodeUtf8 password)
 
 verifyPassword :: Password Hashed -> Password Unhashed -> Bool
 verifyPassword (HashedPW hash) (UnhashedPW password) = validatePassword (encodeUtf8 hash) (encodeUtf8 password)
 
 instance FromJSON (Password Unhashed) where
-  parseJSON (String v) = return $ UnhashedPW v 
+  parseJSON (String v) = return $ UnhashedPW v
   parseJSON _ = mempty
 
 instance FromText (Password Unhashed) where
-  fromText header = case splitOn " " header of 
+  fromText header = case splitOn " " header of
                       ["Simple", pw] -> Just (UnhashedPW pw)
                       _ -> Nothing

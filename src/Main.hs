@@ -24,7 +24,7 @@ import Web.JWT
 main :: IO ()
 main = do
   jwt <- (secret . pack . fromMaybe "this is my jwt secret") <$> lookupEnv "JWT_SECRET"
-  let c = Config 
+  let c = Config
            { jwtSecret=jwt
            , neoConfig=NeoConfig "192.168.99.100" 8474 (Just ("neo4j", "password"))
            }
