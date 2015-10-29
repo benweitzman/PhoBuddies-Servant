@@ -55,6 +55,7 @@ library
                        bytestring-conversion,
                        ConfigFile
   hs-source-dirs:      src
+  ghc-options:         -fhpc
   default-language:    Haskell2010
 
 
@@ -66,21 +67,36 @@ executable PhoBuddies-Servant
   default-language:    Haskell2010
 
 test-suite phobuddies-hspec
+  ghc-options:         -fhpc
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
+  hs-source-dirs:      test src
   main-is:             Spec.hs
-  build-depends:       base
-                     , PhoBuddies-Servant
-                     , hspec
-                     , hspec-wai
-                     , hspec-wai-json
-                     , http-types
-                     , wai
-                     , wai-extra
-                     , directory
-                     , text
-                     , bytestring
-                     , haskell-neo4j-client
+  build-depends:       base,
+                       hspec,
+                       hspec-wai,
+                       hspec-wai-json,
+                       http-types,
+                       QuickCheck,
+                       wai,
+                       wai-extra,
+                       directory,
+                       text,
+                       bytestring,
+                       haskell-neo4j-client,
+                       servant,
+                       servant-server,
+                       jwt,
+                       time,
+                       containers,
+                       aeson,
+                       warp,
+                       mtl,
+                       either,
+                       unordered-containers,
+                       bcrypt,
+                       transformers,
+                       bytestring-conversion,
+                       ConfigFile
   default-language:    Haskell2010
 
 test-suite phobuddies-hlint

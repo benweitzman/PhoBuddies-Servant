@@ -17,6 +17,7 @@ import qualified Database.Neo4j.Transactional.Cypher as C
 import Control.Monad
 
 import Network.HTTP.Types.Method
+import Network.HTTP.Types.Header
 
 import Network.Wai
 import Network.Wai.Test hiding (request)
@@ -43,5 +44,13 @@ setup  = do
 postJSON :: BS.ByteString -> LBS.ByteString -> WaiSession SResponse
 postJSON url = request methodPost url [("Content-Type", "application/json")]
 
+postJSONHeaders :: BS.ByteString -> [Header] -> LBS.ByteString -> WaiSession SResponse
+postJSONHeaders url headers = request methodPost url (("Content-Type", "application/json"):headers)
+
+putJSON :: BS.ByteString -> LBS.ByteString -> WaiSession SResponse
+putJSON url = request methodPut url [("Content-Type", "application/json")]
+
+putJSONHeaders :: BS.ByteString -> [Header] -> LBS.ByteString -> WaiSession SResponse
+putJSONHeaders url headers = request methodPut url (("Content-Type", "application/json"):headers)
 
 
