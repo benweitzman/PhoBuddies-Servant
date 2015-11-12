@@ -51,7 +51,8 @@ spec = do
                 let tokenJSON = simpleBody resp
                     token = BS.pack . fromMaybe ("dummy token" :: String) $ decode tokenJSON >>= M.lookup ("token" :: String)
                 pure resp `shouldRespondWith` 201
-                putJSONHeaders "/user/test@gmail.com" [("Authorization", "Bearer " <> token)] [json|{age:23}|] `shouldRespondWith` 200
+                resp' <- putJSONHeaders "/user/test@gmail.com" [("Authorization", "Bearer " <> token)] [json|{age:23}|]
+                pure resp `shouldRespondWith` 201
 
     describe "email" $ do
         it "should convert between text and email" $

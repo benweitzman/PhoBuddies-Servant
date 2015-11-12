@@ -22,7 +22,7 @@ import Data.Int
 import Servant.API
 import Servant.Utils.Links
 
-type GetAll = QueryParam "offset" Int64 
+type GetAll = QueryParam "offset" Int64
            :> Get '[JSON] (Headers '[Header "Link" Pagination] [Invitation])
 
 type InvitationAPI = GetAll
@@ -33,8 +33,8 @@ type InvitationAPI = GetAll
                   :> Post '[JSON] Invitation
                      -- POST / : Create an invitation
 
-                :<|> Capture "id" Int 
-                  :> "acceptance" 
+                :<|> Capture "id" Int64
+                  :> "acceptance"
                   :> Header "Authorization" (Token Authorization)
                   :> Post '[] ()
                      -- POST /:id/acceptance : Accept an invitation

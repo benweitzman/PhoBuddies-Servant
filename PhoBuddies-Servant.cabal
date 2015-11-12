@@ -32,7 +32,8 @@ library
                        User,
                        Util.Crypto,
                        Util.Neo,
-                       Util.JWT
+                       Util.JWT,
+                       Util.Server
   -- other-modules:
   -- other-extensions:
   build-depends:       base >=4.8 && <4.9,

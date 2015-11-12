@@ -20,9 +20,9 @@ import Servant.Server
 import Web.JWT
 
 data NeoConfig = NeoConfig
-  { host :: ByteString
-  , port :: Int
-  , auth :: Maybe (ByteString, ByteString)
+  { neoHost :: ByteString
+  , neoPort :: Int
+  , neoAuth :: Maybe (ByteString, ByteString)
   }
 
 data Config = Config
@@ -33,16 +33,16 @@ data Config = Config
 runNeo :: Neo4j a -> ConfigM a
 runNeo n = do
   NeoConfig host port mAuth <- asks neoConfig
-  case mAuth of 
+  case mAuth of
     Just auth -> liftIO $ withAuthConnection host port auth n
     Nothing -> liftIO $ withConnection host port n
 
 runTransaction :: C.Transaction a -> ConfigM a
 runTransaction t = do
   res <- runNeo (C.runTransaction t)
-  case res of 
+  case res of
     Right x -> return x
-    Left (code, message) -> liftIO (print message) >> errorOf err500 
+    Left (code, message) -> liftIO (print message) >> errorOf err500
 
 runCypher :: Text -> C.Params -> ConfigM C.Result
 runCypher query params = runTransaction (C.cypher query params)

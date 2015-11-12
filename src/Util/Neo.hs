@@ -44,6 +44,9 @@ query cypher params = do
   forM rows (\row -> parseRow (Row cols row) fromRow >>= \case Right x -> return x
                                                                Left err -> throwError ("RowParse", err))
 
+execute :: Text -> C.Params -> C.Transaction ()
+execute cypher params = void $ C.cypher cypher params
+
 class FromRow a where
     fromRow :: Monad m => RowParserT m a
 
@@ -150,8 +153,8 @@ data h :. t = h :. t
 instance (FromRow h, FromRow t) => FromRow (h :. t) where
   fromRow = (:.) <$> fromRow <*> fromRow
 
-instance FromJSON a => FromRow (Maybe a) where
-  fromRow = catchError (Just <$> field) $ \e -> modify (+1) >> return Nothing
+instance FromRow a => FromRow (Maybe a) where
+  fromRow = catchError (Just <$> fromRow) $ \e -> modify (+2) >> return Nothing
 
 instance FromJSON a => FromRow [a] where
   fromRow = some field

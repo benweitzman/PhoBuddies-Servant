@@ -11,6 +11,7 @@ import User
 import Util.JWT
 import Util.Neo
 import Util.Crypto
+import Util.Server
 import Server.Config
 
 import Control.Applicative
@@ -87,25 +88,21 @@ signIn email (Just unhashed) = do
                           return $ Encoded (Authorization email) secret
 
 updateUser :: Email -> Maybe (Token Authorization) -> User -> ConfigM ()
-updateUser _ Nothing _ = errorOf err401
-updateUser email (Just (Token token)) user = do
-    mAuth <- token <$> asks jwtSecret
-    case mAuth of
-        Just (Authorization authEmail) -> do
-            unless (authEmail == email) $ errorOf err403
-            let Just userProps = HM.delete "id" <$> (decode $ encode user)
-            updated <- runNeo $ do
-                userNodes <- getNodesByLabelAndProperty "User" $ Just ("email" |: fromEmail email)
-                case userNodes of
-                    [userNode] -> do
-                        forM_ (HM.toList userProps) $ \(key, val) ->
-                            setProperty userNode key val
-                        return True
+updateUser email token user = do
+    Authorization authEmail <- requireToken token
+    unless (authEmail == email) $ errorOf err403
+    let Just userProps = HM.delete "id" <$> (decode $ encode user)
+    updated <- runNeo $ do
+        userNodes <- getNodesByLabelAndProperty "User" $ Just ("email" |: fromEmail email)
+        case userNodes of
+            [userNode] -> do
+                forM_ (HM.toList userProps) $ \(key, val) ->
+                    setProperty userNode key val
+                return True
 
-                    [] -> return False
+            [] -> return False
 
-            unless updated $ errorOf err404
-        Nothing -> errorOf err401
+    unless updated $ errorOf err404
 
 getAll :: Maybe Int64 -> ConfigM (Headers '[Header "Link" Pagination] [User])
 getAll Nothing = getAll (Just 1)
@@ -135,18 +132,13 @@ getSingle email = do
 -}
 
 deleteUser :: Email -> Maybe (Token Authorization) -> ConfigM ()
-deleteUser _ Nothing = errorOf err401
-deleteUser email (Just (Token token)) = do
-    mAuth <- token <$> asks jwtSecret
-    case mAuth of
-        Nothing -> errorOf err401
+deleteUser email token = do
+    Authorization authEmail <- requireToken token
+    unless (authEmail == email) $ errorOf err403
+    deleted <- runNeo $ do
+        userNodes <- getNodesByLabelAndProperty "User" $ Just ("email" |: fromEmail email)
+        case userNodes of
+            [userNode] -> deleteNode userNode >> return True
 
-        Just (Authorization authEmail) -> do
-            unless (authEmail == email) $ errorOf err403
-            deleted <- runNeo $ do
-                userNodes <- getNodesByLabelAndProperty "User" $ Just ("email" |: fromEmail email)
-                case userNodes of
-                    [userNode] -> deleteNode userNode >> return True
-
-                    _ -> return False
-            unless deleted $ errorOf err404
+            _ -> return False
+    unless deleted $ errorOf err404
